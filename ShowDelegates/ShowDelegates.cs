@@ -16,12 +16,20 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "1.0.0";
+        public override string Version => "1.0.1";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
-        public override void OnEngineInit()
+
+		[AutoRegisterConfigKey]
+		private static readonly ModConfigurationKey<bool> KEY_SHOW_DELEGATES = new ModConfigurationKey<bool>("show_deleages", "If false delegates will not be shown", () => true);
+		[AutoRegisterConfigKey]
+		private static readonly ModConfigurationKey<bool> KEY_SHOW_HIDDEN = new ModConfigurationKey<bool>("show_hidden", "If false items with the hidden HideInInspector attribute will not be shown", ()=>true);
+		private static ModConfiguration config;
+
+		public override void OnEngineInit()
         {
             Harmony harmony = new Harmony("me.art0007i.ShowDelegates");
             harmony.PatchAll();
+			config = GetConfiguration();
 
         }
 		private static void GenerateDelegateProxy<T>(UIBuilder ui, string name, T target) where T : class
@@ -68,6 +76,7 @@ namespace ShowDelegates
         {
 			private static void Postfix(WorkerInspector __instance, Worker worker, UIBuilder ui, Predicate<ISyncMember> memberFilter = null)
 			{
+				if(config.GetValue(KEY_SHOW_HIDDEN))
 				for (int i = 0; i < worker.SyncMemberCount; i++)
 				{
 					ISyncMember syncMember = worker.GetSyncMember(i);
@@ -76,6 +85,7 @@ namespace ShowDelegates
 						GenerateReferenceProxy(ui, worker.GetSyncMemberName(i), syncMember);
 					}
 				}
+				if (!config.GetValue(KEY_SHOW_DELEGATES)) return;
 				BindingFlags bindingAttr = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
 				List<MethodInfo> list = worker.GetType().GetMethods(bindingAttr).ToList<MethodInfo>();
 				list.AddRange(worker.GetType().BaseType.GetMethods(bindingAttr).ToArray<MethodInfo>());
