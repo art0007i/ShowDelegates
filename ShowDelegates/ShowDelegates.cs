@@ -94,8 +94,16 @@ namespace ShowDelegates
 						select m).ToList<MethodInfo>();
 				if (list.Count != 0)
 				{
-					LocaleString localeString = "---- SYNC METHODS HERE ----";
-					ui.Text(localeString, true, new Alignment?(Alignment.MiddleCenter), true, null);
+					var myTxt = ui.Text("---- SYNC METHODS HERE ----", true, new Alignment?(Alignment.MiddleCenter), true, null);
+					var delegates = ui.VerticalLayout();
+					delegates.Slot.ActiveSelf = false;
+					delegates.Slot.RemoveComponent(delegates.Slot.GetComponent<LayoutElement>());
+                    myTxt.Slot.AttachComponent<Expander>().SectionRoot.Target = delegates.Slot;
+					var colorDriver = myTxt.Slot.AttachComponent<Button>().ColorDrivers.Add();
+					colorDriver.ColorDrive.Target = myTxt.Color;
+					colorDriver.NormalColor.Value = color.Black;
+					colorDriver.HighlightColor.Value = new color(0.4f);
+					colorDriver.PressColor.Value = new color(0.7f);
 					foreach (MethodInfo methodInfo in list)
 					{
 						if (methodInfo.GetParameters().Length == 0)
@@ -228,6 +236,7 @@ namespace ShowDelegates
 							});
 						}
 					}
+					ui.NestOut();
 				}
 			}
 		}
