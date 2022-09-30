@@ -12,13 +12,15 @@ using BaseX;
 
 namespace ShowDelegates
 {
-    public class ShowDelegates : NeosMod
-    {
-        public override string Name => "ShowDelegates";
-        public override string Author => "art0007i";
-        public override string Version => "1.1.0";
-        public override string Link => "https://github.com/art0007i/ShowDelegates/";
+	public class ShowDelegates : NeosMod
+	{
+		public override string Name => "ShowDelegates";
+		public override string Author => "art0007i";
+		public override string Version => "1.1.1";
+		public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
+		[AutoRegisterConfigKey]
+		private static readonly ModConfigurationKey<bool> KEY_DEFAULT_OPEN = new ModConfigurationKey<bool>("default_open", "If true delegates will be expanded by default", () => false);
 		[AutoRegisterConfigKey]
 		private static readonly ModConfigurationKey<bool> KEY_SHOW_DELEGATES = new ModConfigurationKey<bool>("show_deleages", "If false delegates will not be shown", () => true);
 		[AutoRegisterConfigKey]
@@ -26,12 +28,12 @@ namespace ShowDelegates
 		private static ModConfiguration config;
 
 		public override void OnEngineInit()
-        {
-            Harmony harmony = new Harmony("me.art0007i.ShowDelegates");
-            harmony.PatchAll();
+		{
+			Harmony harmony = new Harmony("me.art0007i.ShowDelegates");
+			harmony.PatchAll();
 			config = GetConfiguration();
 
-        }
+		}
 		private static void GenerateDelegateProxy<T>(UIBuilder ui, string name, T target) where T : class
 		{
 			LocaleString localeString = name + ":";
@@ -73,7 +75,7 @@ namespace ShowDelegates
 		[HarmonyPatch(typeof(WorkerInspector))]
 		[HarmonyPatch("BuildInspectorUI")]
 		class WorkerInspector_BuildInspectorUI_Patch
-        {
+		{
 			private static void Postfix(WorkerInspector __instance, Worker worker, UIBuilder ui, Predicate<ISyncMember> memberFilter = null)
 			{
 				if(config.GetValue(KEY_SHOW_HIDDEN))
@@ -98,7 +100,9 @@ namespace ShowDelegates
 					var delegates = ui.VerticalLayout();
 					delegates.Slot.ActiveSelf = false;
 					delegates.Slot.RemoveComponent(delegates.Slot.GetComponent<LayoutElement>());
-                    myTxt.Slot.AttachComponent<Expander>().SectionRoot.Target = delegates.Slot;
+					var expander = myTxt.Slot.AttachComponent<Expander>();
+					expander.SectionRoot.Target = delegates.Slot;
+					expander.IsExpanded = config.GetValue(KEY_DEFAULT_OPEN);
 					var colorDriver = myTxt.Slot.AttachComponent<Button>().ColorDrivers.Add();
 					colorDriver.ColorDrive.Target = myTxt.Color;
 					colorDriver.NormalColor.Value = color.Black;
