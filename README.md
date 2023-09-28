@@ -4,6 +4,9 @@ A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoade
 
 The hidden items thing doesn't really make sense because of the mod's name but as far as I know it only shows the components field on slots and users.
 
+<img alt="show delegates promo art" src="https://github.com/art0007i/ShowDelegates/assets/19620451/070843b3-e53e-4dce-b8cb-c2ecaa8b96d9" height=500) />
+
+
 ## Installation
 1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).
 1. Place [ShowDelegates.dll](https://github.com/art0007i/ShowDelegates/releases/latest/download/ShowDelegates.dll) into your `rml_mods` folder. This folder should be at `C:\Program Files (x86)\Steam\steamapps\common\Resonite\rml_mods` for a default install. You can create it if it's missing, or if you launch the game once with ResoniteModLoader installed it will create the folder for you.
