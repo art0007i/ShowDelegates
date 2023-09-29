@@ -14,7 +14,7 @@ namespace ShowDelegates
 	{
 		public override string Name => "ShowDelegates";
 		public override string Author => "art0007i";
-		public override string Version => "2.0.0";
+		public override string Version => "2.1.0";
 		public override string Link => "https://github.com/art0007i/ShowDelegates/";
         
 		[AutoRegisterConfigKey]
@@ -160,8 +160,8 @@ namespace ShowDelegates
 							}
                             if (delegateType == null)
 							{
-								Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
-								ui.Text(funName("<i>unknown</i>", info.method), true, new Alignment?(Alignment.MiddleLeft));
+								//Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
+								ui.Text("<color=orange>" + funName("<i>unknown</i>", info.method), true, new Alignment?(Alignment.MiddleLeft));
 								continue;
 							}
 						}

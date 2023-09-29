@@ -106,17 +106,17 @@ internal class Helper
 
     public static Type ClassifyDelegate(MethodInfo m)
     {
-        if (argumentLookup.TryGetValue(new(m), out var t))
+        /*if (argumentLookup.TryGetValue(new(m), out var t))
         {
             return t;
-        }
+        }*/
         var p = m.GetParameters().Select(para => para.ParameterType).ToArray();
         if(m.ReturnType == typeof(void))
         {
-            if(p.Length == 3 && p[0] == typeof(IButton) && p[1] == typeof(ButtonEventData))
+            /*if(p.Length == 3 && p[0] == typeof(IButton) && p[1] == typeof(ButtonEventData))
             {
                 return typeof(ButtonEventHandler<>).MakeGenericType(p[2]);
-            }
+            }*/
             return Expression.GetActionType(p);
         }
         else
