@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using FrooxEngine;
 using FrooxEngine.UIX;
 using Elements.Core;
+using FrooxEngine.ProtoFlux;
 
 namespace ShowDelegates
 {
@@ -14,17 +15,19 @@ namespace ShowDelegates
 	{
 		public override string Name => "ShowDelegates";
 		public override string Author => "art0007i";
-		public override string Version => "2.1.0";
+		public override string Version => "2.2.0";
 		public override string Link => "https://github.com/art0007i/ShowDelegates/";
         
 		[AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_SHOW_HIDDEN = new ModConfigurationKey<bool>("show_hidden", "If false items with the hidden HideInInspector attribute will not be shown", () => true);
-        [AutoRegisterConfigKey]
 		private static readonly ModConfigurationKey<bool> KEY_DEFAULT_OPEN = new ModConfigurationKey<bool>("default_open", "If true delegates will be expanded by default", () => false);
 		[AutoRegisterConfigKey]
 		private static readonly ModConfigurationKey<bool> KEY_SHOW_DELEGATES = new ModConfigurationKey<bool>("show_deleages", "If false delegates will not be shown", () => true);
-		[AutoRegisterConfigKey]
+        [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<bool> KEY_SHORT_NAMES = new ModConfigurationKey<bool>("short_names", "Show short delegate names.", () => true);
+        [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> KEY_SHOW_NON_DEFAULT = new ModConfigurationKey<bool>("show_non_default", "If false only delegates that appear in vanilla will be shown.", () => true);
+        [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> KEY_SHOW_HIDDEN = new ModConfigurationKey<bool>("show_hidden", "If true items hidden with the HideInInspector attribute will be shown", () => true);
 
         private static ModConfiguration config;
 
@@ -94,6 +97,23 @@ namespace ShowDelegates
 			}
 		}
 
+		[HarmonyPatch(typeof(ProtoFluxTool), "OnCreateDelegateProxy")]
+		class FixProtoFluxDeleagtes
+		{
+			public static void Prefix(IButton button, ButtonEventData eventData, ref Delegate target)
+			{
+				try
+				{
+					// this could throw in many ways....
+					var delegateType = Helper.GetFuncOrAction(target.Method);
+                    target = target.Method.CreateDelegate(delegateType, target.Target);
+                }
+				catch(Exception e)
+				{
+				}
+            }
+		}
+
 		[HarmonyPatch(typeof(WorkerInspector))]
 		[HarmonyPatch("BuildInspectorUI")]
 		class WorkerInspector_BuildInspectorUI_Patch
@@ -146,7 +166,10 @@ namespace ShowDelegates
 						var info = initInfo.syncMethods[j];
 
                         var delegateType = info.methodType;
-						if (!typeof(MulticastDelegate).IsAssignableFrom(delegateType))
+
+                        if (!config.GetValue(KEY_SHOW_NON_DEFAULT) && delegateType == typeof(Delegate)) continue;
+
+                        if (!typeof(MulticastDelegate).IsAssignableFrom(delegateType))
 						{
 							try
 							{
@@ -160,13 +183,13 @@ namespace ShowDelegates
 							}
                             if (delegateType == null)
 							{
-								//Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
+								Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
 								ui.Text("<color=orange>" + funName("<i>unknown</i>", info.method), true, new Alignment?(Alignment.MiddleLeft));
 								continue;
 							}
 						}
 
-						var method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
+                        var method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
 
                         delegateFunc.MakeGenericMethod(delegateType).Invoke(null, new object[]
 						{
