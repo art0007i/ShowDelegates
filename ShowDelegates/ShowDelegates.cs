@@ -15,7 +15,7 @@ namespace ShowDelegates
 	{
 		public override string Name => "ShowDelegates";
 		public override string Author => "art0007i";
-		public override string Version => "2.2.0";
+		public override string Version => "2.2.1";
 		public override string Link => "https://github.com/art0007i/ShowDelegates/";
         
 		[AutoRegisterConfigKey]
@@ -145,7 +145,11 @@ namespace ShowDelegates
                 }
                 if (!config.GetValue(KEY_SHOW_DELEGATES)) return false;
 
-				if (worker.SyncMethodCount > 0)
+
+                var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
+				var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate));
+
+				if (syncFuncs.Any())
 				{
 					var myTxt = ui.Text("---- SYNC METHODS HERE ----", true, new Alignment?(Alignment.MiddleCenter), true, null);
 					var delegates = ui.VerticalLayout();
@@ -158,16 +162,9 @@ namespace ShowDelegates
 					colorDriver.ColorDrive.Target = myTxt.Color;
                     RadiantUI_Constants.SetupLabelDriverColors(colorDriver);
 
-
-					var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
-
-                    for (int j = 0; j < worker.SyncMethodCount; j++)
+                    foreach (var info in syncFuncs)
                     {
-						var info = initInfo.syncMethods[j];
-
                         var delegateType = info.methodType;
-
-                        if (!config.GetValue(KEY_SHOW_NON_DEFAULT) && delegateType == typeof(Delegate)) continue;
 
                         if (!typeof(MulticastDelegate).IsAssignableFrom(delegateType))
 						{
