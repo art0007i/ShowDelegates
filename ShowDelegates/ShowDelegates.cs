@@ -15,7 +15,7 @@ namespace ShowDelegates
 	{
 		public override string Name => "ShowDelegates";
 		public override string Author => "art0007i";
-		public override string Version => "2.2.1";
+		public override string Version => "2.2.2";
 		public override string Link => "https://github.com/art0007i/ShowDelegates/";
         
 		[AutoRegisterConfigKey]
@@ -145,12 +145,13 @@ namespace ShowDelegates
                 }
                 if (!config.GetValue(KEY_SHOW_DELEGATES)) return false;
 
-
-                var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
-				var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate));
-
-				if (syncFuncs.Any())
+				if (worker.SyncMethodCount > 0)
 				{
+                    var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
+					var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate));
+
+					if (!syncFuncs.Any()) return false;
+
 					var myTxt = ui.Text("---- SYNC METHODS HERE ----", true, new Alignment?(Alignment.MiddleCenter), true, null);
 					var delegates = ui.VerticalLayout();
 					delegates.Slot.ActiveSelf = false;
