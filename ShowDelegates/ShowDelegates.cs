@@ -15,7 +15,7 @@ namespace ShowDelegates
 	{
 		public override string Name => "ShowDelegates";
 		public override string Author => "art0007i";
-		public override string Version => "2.2.2";
+		public override string Version => "2.2.3";
 		public override string Link => "https://github.com/art0007i/ShowDelegates/";
         
 		[AutoRegisterConfigKey]
@@ -148,7 +148,7 @@ namespace ShowDelegates
 				if (worker.SyncMethodCount > 0)
 				{
                     var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
-					var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate));
+					var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate) && m.method.IsPublic);
 
 					if (!syncFuncs.Any()) return false;
 
