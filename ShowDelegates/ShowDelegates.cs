@@ -108,7 +108,7 @@ namespace ShowDelegates
                     foreach (var m in type.GetMethods(AccessTools.all))
                     {
                         // i hate this but it works?
-                        if (set.Any(v => MethodsEqual(v, m))) continue;
+                        if (set.Any(v => v.MethodHandle == m.MethodHandle)) continue;
                         set.Add(m);
                     }
                     type = type.BaseType;
@@ -118,24 +118,6 @@ namespace ShowDelegates
 
                 Pool.Return(ref set);
                 return arr;
-            }
-            
-            // There has to be a better way
-            public static bool MethodsEqual(MethodInfo a, MethodInfo b)
-            {
-                // GetHashCode doens't work here, apparently there is a "ReflectedType" property which will be different in this scenario
-                // Although the hashcodes match on the sharplab.io website for some reason...
-                // That means that this code could behave differently on different .net implementations which is never good.
-                // There's also more stuff that this function could check that I didn't write such as "IsStatic" or "IsVirtual"
-                // But I think some of those are derived from other ones so there isn't much of a point to check *everything*
-                // But there's also no indication of what is the source data is and what is derived
-                // Also because I'm not checking *everything* there could be a collision which would cause a method to be hidden where it shouldn't
-                return a.Name == b.Name &&
-                    a.ReturnType == b.ReturnType &&
-                    a.IsPublic == b.IsPublic &&
-                    a.MethodImplementationFlags == b.MethodImplementationFlags &&
-                    a.Attributes == b.Attributes &&
-                    a.GetParameters().SequenceEqual(b.GetParameters());
             }
         }
 
