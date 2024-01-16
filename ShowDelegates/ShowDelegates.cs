@@ -16,7 +16,7 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "2.2.4";
+        public override string Version => "2.2.5";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
         [AutoRegisterConfigKey]
@@ -91,10 +91,52 @@ namespace ShowDelegates
                     var code = codes[i];
                     if (code.operand is MethodInfo mf && mf.Name == nameof(Type.GetMethods))
                     {
-                        codes[i - 1].operand = (sbyte)AccessTools.all;
+                        codes[i].operand = typeof(InitializeAllDelegatesPatch).GetMethod(nameof(GetAllMethodsForRealThisTime));
                     }
                 }
                 return codes.AsEnumerable();
+            }
+
+            // If there is a better way to do this please tell me
+            public static MethodInfo[] GetAllMethodsForRealThisTime(Type t, BindingFlags _flags)
+            {
+                var set = Pool.BorrowHashSet<MethodInfo>();
+
+                var type = t;
+                while (type != null)
+                {
+                    foreach (var m in type.GetMethods(AccessTools.all))
+                    {
+                        // i hate this but it works?
+                        if (set.Any(v => MethodsEqual(v, m))) continue;
+                        set.Add(m);
+                    }
+                    type = type.BaseType;
+                }
+
+                var arr = set.ToArray();
+
+                Pool.Return(ref set);
+                return arr;
+            }
+            
+            // There has to be a better way
+            public static bool MethodsEqual(MethodInfo a, MethodInfo b)
+            {
+                // GetHashCode doens't work here, apparently there is a "ReflectedType" property which will be different in this scenario
+                // Although the hashcodes match on the sharplab.io website for some reason...
+                // That means that this code could behave differently on different .net implementations which is never good.
+                // There's also more stuff that this function could check that I didn't write such as "IsStatic" or "IsVirtual"
+                // But I think some of those are derived from other ones so there isn't much of a point to check *everything*
+                // But there's also no indication of what is the source data is and what is derived
+                // Also because I'm not checking *everything* there could be a collision which would cause a method to be hidden where it shouldn't
+                return a.Name == b.Name &&
+                    a.ReturnType == b.ReturnType &&
+                    a.IsPublic == b.IsPublic &&
+                    a.MethodImplementationFlags == b.MethodImplementationFlags &&
+                    a.Attributes == b.Attributes &&
+                    a.GetParameters().SequenceEqual(b.GetParameters()) &&
+                    a.CustomAttributes.SequenceEqual(b.CustomAttributes);
             }
         }
 
