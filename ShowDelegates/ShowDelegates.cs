@@ -135,8 +135,7 @@ namespace ShowDelegates
                     a.IsPublic == b.IsPublic &&
                     a.MethodImplementationFlags == b.MethodImplementationFlags &&
                     a.Attributes == b.Attributes &&
-                    a.GetParameters().SequenceEqual(b.GetParameters()) &&
-                    a.CustomAttributes.SequenceEqual(b.CustomAttributes);
+                    a.GetParameters().SequenceEqual(b.GetParameters());
             }
         }
 
