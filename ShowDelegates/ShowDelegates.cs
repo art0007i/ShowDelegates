@@ -16,7 +16,7 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "2.2.5";
+        public override string Version => "2.2.6";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
         [AutoRegisterConfigKey]
