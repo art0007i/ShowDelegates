@@ -97,7 +97,7 @@ internal class Helper
         { new(typeof(ITouchable), typeof(TouchEventInfo).MakeByRefType()), typeof(TouchEvent) },
         { new(typeof(ITouchable), new Type[] {typeof(RelayTouchSource), typeof(float3).MakeByRefType(), typeof(float3).MakeByRefType(), typeof(float3).MakeByRefType(), typeof(bool).MakeByRefType()}), typeof(TouchableGetter) },
         { new(typeof(SlotGizmo), typeof(SlotGizmo)), typeof(SlotGizmo.SlotGizmoReplacement) },
-        { new(typeof(WorldItem)), typeof(WorldItemAction) },
+        { new(typeof(LegacyWorldItem)), typeof(LegacyWorldItemAction) },
         //{ new(typeof(void), new Type[] {}), typeof(Action) }, // Used in WorldCloseDialog.Close 
         // Action<LocomotionController> // used in somewhere?
 
