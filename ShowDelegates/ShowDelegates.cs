@@ -16,7 +16,7 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "2.2.8";
+        public override string Version => "2.2.9";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
         [AutoRegisterConfigKey]
@@ -39,7 +39,7 @@ namespace ShowDelegates
             harmony.PatchAll();
 
         }
-        private static void GenerateDelegateProxy<T>(UIBuilder ui, string name, T target) where T : class
+        private static void GenerateDelegateProxy<T>(UIBuilder ui, string name, T target) where T : Delegate
         {
             LocaleString localeString = name;
             Text text = ui.Text(localeString, true, new Alignment?(Alignment.MiddleLeft), true, null);
