@@ -113,7 +113,7 @@ internal class Helper
         { new(typeof(bool), [typeof(Snapper), typeof(SnapTarget)]), typeof(SnapperFilter) }, // Used in OrbCartridgeTool.SnapFilter
         { new(typeof(DevCreateNewForm), typeof(Slot)), typeof(ItemCreated) }, // Used in MaterialTool.RunConversion
         // Func<ICollider, bool> // Used in MeterTool.FilterUsers
-        { new(typeof(ModalOverlayConstructor), [typeof(Slot)]), typeof(ModalOverlayConstructor) },
+        { new(typeof(FrooxEngine.UIX.ModalOverlay), [typeof(Slot)]), typeof(ModalOverlayConstructor) },
         // Action<ValueStream<float3>, int> // Used in CommonAvatarBuilder.SetupPositionStream
         // Action<ValueStream<floatQ>, int> // Used in CommonAvatarBuilder.SetupRotationStream
         // Func<RecordDirectory> // Used in InventoryBrowser.GetDefaultAuto
