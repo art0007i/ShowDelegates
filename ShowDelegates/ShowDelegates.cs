@@ -16,7 +16,7 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "2.2.9";
+        public override string Version => "2.2.10";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
         [AutoRegisterConfigKey]
@@ -91,7 +91,8 @@ namespace ShowDelegates
                     var code = codes[i];
                     if (code.operand is MethodInfo mf && mf.Name == nameof(Type.GetMethods))
                     {
-                        codes[i].operand = typeof(InitializeAllDelegatesPatch).GetMethod(nameof(GetAllMethodsForRealThisTime));
+                        var patchMethod = typeof(InitializeAllDelegatesPatch).GetMethod(nameof(GetAllMethodsForRealThisTime));
+                        codes[i] = new(OpCodes.Call, patchMethod);
                     }
                 }
                 return codes.AsEnumerable();
@@ -100,21 +101,20 @@ namespace ShowDelegates
             // If there is a better way to do this please tell me
             public static MethodInfo[] GetAllMethodsForRealThisTime(Type t, BindingFlags _flags)
             {
-                var set = Pool.BorrowHashSet<MethodInfo>();
+                var set = Pool.BorrowDictionary<RuntimeMethodHandle, MethodInfo>();
 
                 var type = t;
                 while (type != null)
                 {
                     foreach (var m in type.GetMethods(AccessTools.all))
                     {
-                        // i hate this but it works?
-                        if (set.Any(v => v.MethodHandle == m.MethodHandle)) continue;
-                        set.Add(m);
+                        if (set.ContainsKey(m.MethodHandle)) continue;
+                        set.Add(m.MethodHandle, m);
                     }
                     type = type.BaseType;
                 }
 
-                var arr = set.ToArray();
+                var arr = set.Values.ToArray();
 
                 Pool.Return(ref set);
                 return arr;
@@ -135,6 +135,27 @@ namespace ShowDelegates
                 catch (Exception e)
                 {
                 }
+            }
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> codes)
+            {
+                foreach (var code in codes)
+                {
+                    if (code.operand is MethodInfo mf && mf.Name == nameof(Type.GetType))
+                    {
+                        var patchMethod = typeof(FixProtoFluxDeleagtes).GetMethod(nameof(GetTypeFixed));
+                        yield return new(OpCodes.Call, patchMethod);
+                    }
+                    else
+                    {
+                        yield return code;
+                    }
+                }
+            }
+
+            public static Type? GetTypeFixed(string typeName)
+            {
+                return typeof(ProtoFluxTool).Assembly.GetType(typeName);
             }
         }
 
