@@ -203,9 +203,12 @@ namespace ShowDelegates
                     var expander = myTxt.Slot.AttachComponent<Expander>();
                     expander.SectionRoot.Target = delegates.Slot;
                     expander.IsExpanded = config.GetValue(KEY_DEFAULT_OPEN);
-                    var colorDriver = myTxt.Slot.AttachComponent<Button>().ColorDrivers.Add();
+                    var theButton = myTxt.Slot.AttachComponent<Button>();
+                    var colorDriver = theButton.ColorDrivers.Add();
                     colorDriver.ColorDrive.Target = myTxt.Color;
                     RadiantUI_Constants.SetupLabelDriverColors(colorDriver);
+                    // Prevent accidental presses when scrolling
+                    theButton.RequireLockInToPress.Value = true;
 
                     foreach (var info in syncFuncs)
                     {
