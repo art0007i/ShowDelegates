@@ -239,9 +239,9 @@ namespace ShowDelegates
                         {
                             method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            Error($"Error when trying to create a delegate for {info.method.DeclaringType.Name}.{info.method.Name} with sync method type {delegateType.GetNiceName()}");
+                            Error($"Error when trying to create a delegate for {info.method.DeclaringType.Name}.{info.method.Name} with sync method type {delegateType.GetNiceName()}\n{e}");
                             ui.Text("<color=red>" + funName(delegateType.ToString(), info.method), true, new Alignment?(Alignment.MiddleLeft));
                             continue;
                         }
