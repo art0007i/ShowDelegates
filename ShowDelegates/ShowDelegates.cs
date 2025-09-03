@@ -1,13 +1,13 @@
-﻿using HarmonyLib;
+﻿using Elements.Core;
+using FrooxEngine;
+using FrooxEngine.ProtoFlux;
+using FrooxEngine.UIX;
+using HarmonyLib;
 using ResoniteModLoader;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
-using FrooxEngine;
-using FrooxEngine.UIX;
-using Elements.Core;
-using FrooxEngine.ProtoFlux;
 using System.Reflection.Emit;
 
 namespace ShowDelegates
@@ -234,7 +234,17 @@ namespace ShowDelegates
                             }
                         }
 
-                        var method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
+                        Delegate method = null;
+                        try
+                        {
+                            method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
+                        }
+                        catch
+                        {
+                            Error($"Error when trying to create a delegate for {info.method.DeclaringType.Name}.{info.method.Name} with sync method type {delegateType.GetNiceName()}");
+                            ui.Text("<color=red>" + funName(delegateType.ToString(), info.method), true, new Alignment?(Alignment.MiddleLeft));
+                            continue;
+                        }
 
                         delegateFunc.MakeGenericMethod(delegateType).Invoke(null, new object[]
                         {
