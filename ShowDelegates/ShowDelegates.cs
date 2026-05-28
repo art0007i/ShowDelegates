@@ -16,7 +16,7 @@ namespace ShowDelegates
     {
         public override string Name => "ShowDelegates";
         public override string Author => "art0007i";
-        public override string Version => "2.2.10";
+        public override string Version => "2.2.11";
         public override string Link => "https://github.com/art0007i/ShowDelegates/";
 
         [AutoRegisterConfigKey]
@@ -134,6 +134,7 @@ namespace ShowDelegates
                 }
                 catch (Exception e)
                 {
+                    Debug("Exception in FixProtoFluxDeleagtes.Prefix: " + e);
                 }
             }
 
@@ -214,44 +215,44 @@ namespace ShowDelegates
                     {
                         var delegateType = info.methodType;
 
-                        if (!typeof(MulticastDelegate).IsAssignableFrom(delegateType))
+                        Delegate method = null;
+                        if (typeof(MulticastDelegate).IsAssignableFrom(delegateType))
+                        {
+                            try
+                            {
+                                method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
+                            }
+                            catch (Exception e)
+                            {
+                                Error($"Error when trying to create a delegate for {info.method.FullDescription()} with sync method type {delegateType.GetNiceName()}. This is most likely a bug with Resonite, not the mod.\n{e}");
+                            }
+                        }
+                        
+                        if (method == null)
                         {
                             try
                             {
                                 // this could throw in many ways....
                                 delegateType = Helper.ClassifyDelegate(info.method);
+                                method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
                             }
                             catch (Exception e)
                             {
-                                Error("Error while classifying function " + info.method + "\n" + e.ToString());
-                                delegateType = null;
-                            }
-                            if (delegateType == null)
-                            {
-                                Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
-                                ui.Text("<color=orange>" + funName("<i>unknown</i>", info.method), true, new Alignment?(Alignment.MiddleLeft));
-                                continue;
+                                Error("Error while classifying function " + info.method + "\n" + e);
                             }
                         }
-
-                        Delegate method = null;
-                        try
+                        
+                        if (method == null)
                         {
-                            method = info.method.IsStatic ? info.method.CreateDelegate(delegateType) : info.method.CreateDelegate(delegateType, worker);
-                        }
-                        catch (Exception e)
-                        {
-                            Error($"Error when trying to create a delegate for {info.method.DeclaringType.Name}.{info.method.Name} with sync method type {delegateType.GetNiceName()}\n{e}");
-                            ui.Text("<color=red>" + funName(delegateType.ToString(), info.method), true, new Alignment?(Alignment.MiddleLeft));
+                            Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
+                            ui.Text("<color=orange>" + funName("<i>unknown</i>", info.method), true, Alignment.MiddleLeft);
                             continue;
                         }
-
-                        delegateFunc.MakeGenericMethod(delegateType).Invoke(null, new object[]
-                        {
+                        delegateFunc.MakeGenericMethod(delegateType).Invoke(null, [
                             ui,
                             funName(delegateType.ToString(), info.method),
                             method
-                        });
+                        ]);
                     }
                     ui.NestOut();
                 }
