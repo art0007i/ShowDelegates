@@ -22,22 +22,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="HarmonyLib">
-      <HintPath>$(GamePath)rml_libs\0Harmony.dll</HintPath>
-      <HintPath Condition="Exists('$(GamePath)0Harmony.dll')">$(GamePath)0Harmony.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Lib.Harmony" Version="2.4.2" />
+    <PackageReference Include="ResoniteModLoader" Version="5.0.1" />
     <Reference Include="Elements.Core">
       <HintPath>$(GameLibs)Elements.Core.dll</HintPath>
     </Reference>
     <Reference Include="FrooxEngine">
       <HintPath>$(GameLibs)FrooxEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="ResoniteModLoader">
-      <HintPath>$(GamePath)ResoniteModLoader.dll</HintPath>
-      <HintPath>$(GamePath)Libraries\ResoniteModLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(GameLibs)Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
 
