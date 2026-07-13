@@ -1,44 +1,43 @@
-﻿using Elements.Core;
+﻿using System.Reflection;
+using System.Reflection.Emit;
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using BepInEx.NET.Common;
+using BepInExResoniteShim;
+using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.ProtoFlux;
 using FrooxEngine.UIX;
 using HarmonyLib;
-using ResoniteModLoader;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 
-namespace ShowDelegates
+namespace ShowDelegates;
+
+[ResonitePlugin(PluginMetadata.GUID, PluginMetadata.NAME, PluginMetadata.VERSION, PluginMetadata.AUTHORS, PluginMetadata.REPOSITORY_URL)]
+[BepInDependency(BepInExResoniteShim.PluginMetadata.GUID, BepInDependency.DependencyFlags.HardDependency)]
+public class Plugin : BasePlugin
 {
-    public class ShowDelegates : ResoniteMod
+#nullable disable
+    internal static new ManualLogSource Log;
+    internal static ConfigEntry<bool> DefaultOpen;
+    internal static ConfigEntry<bool> ShowDelegates;
+    internal static ConfigEntry<bool> ShortNames;
+    internal static ConfigEntry<bool> ShowNonDefault;
+    internal static ConfigEntry<bool> ShowHidden;
+#nullable enable
+
+    public override void Load()
     {
-        public override string Name => "ShowDelegates";
-        public override string Author => "art0007i";
-        public override string Version => "2.2.11";
-        public override string Link => "https://github.com/art0007i/ShowDelegates/";
+        Log = base.Log;
 
-        [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_DEFAULT_OPEN = new ModConfigurationKey<bool>("default_open", "If true delegates will be expanded by default", () => false);
-        [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_SHOW_DELEGATES = new ModConfigurationKey<bool>("show_deleages", "If false delegates will not be shown", () => true);
-        [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_SHORT_NAMES = new ModConfigurationKey<bool>("short_names", "Show short delegate names.", () => true);
-        [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_SHOW_NON_DEFAULT = new ModConfigurationKey<bool>("show_non_default", "If false only delegates that appear in vanilla will be shown.", () => true);
-        [AutoRegisterConfigKey]
-        private static readonly ModConfigurationKey<bool> KEY_SHOW_HIDDEN = new ModConfigurationKey<bool>("show_hidden", "If true items hidden with the HideInInspector attribute will be shown", () => true);
-
-        private static ModConfiguration config;
-
-        public override void OnEngineInit()
-        {
-            config = GetConfiguration();
-            Harmony harmony = new Harmony("me.art0007i.ShowDelegates");
-            harmony.PatchAll();
-
-        }
+        DefaultOpen = Config.Bind("General", "DefaultOpen", false, "If true delegates will be expanded by default.");
+        ShowDelegates = Config.Bind("General", "ShowDelegates", true, "If false delegates will not be shown.");
+        ShortNames = Config.Bind("General", "ShortNames", true, "Show short delegate names.");
+        ShowNonDefault = Config.Bind("General", "ShowNonDefault", true, "If false only delegates that appear in vanilla will be shown.");
+        ShowHidden = Config.Bind("General", "ShowHidden", true, "If true items hidden with the HideInInspector attribute will be shown");
+        
+        HarmonyInstance.PatchAll();
+    }
         private static void GenerateDelegateProxy<T>(UIBuilder ui, string name, T target) where T : Delegate
         {
             LocaleString localeString = name;
@@ -62,7 +61,7 @@ namespace ShowDelegates
 
         private static string funName(string prefix, MethodInfo info)
         {
-            if (config.GetValue(KEY_SHORT_NAMES))
+            if (ShortNames.Value)
             {
                 string text = string.Join(", ", from p in info.GetParameters()
                                                 select p.ParameterType.GetNiceName() + " " + p.Name);
@@ -134,7 +133,7 @@ namespace ShowDelegates
                 }
                 catch (Exception e)
                 {
-                    Debug("Exception in FixProtoFluxDeleagtes.Prefix: " + e);
+                    Log.LogDebug("Exception in FixProtoFluxDeleagtes.Prefix: " + e);
                 }
             }
 
@@ -164,17 +163,17 @@ namespace ShowDelegates
         [HarmonyPatch("BuildInspectorUI")]
         class WorkerInspector_BuildInspectorUI_Patch
         {
-            public static MethodInfo delegateFunc = typeof(ShowDelegates).GetMethod(nameof(ShowDelegates.GenerateDelegateProxy), BindingFlags.NonPublic | BindingFlags.Static);
+            public static MethodInfo delegateFunc = typeof(Plugin).GetMethod(nameof(Plugin.GenerateDelegateProxy), BindingFlags.NonPublic | BindingFlags.Static);
 
             public static bool ProcessHidden(bool orig)
             {
-                if (config.GetValue(KEY_SHOW_HIDDEN)) return false;
+                if (ShowHidden.Value) return false;
                 return orig;
             }
 
             public static void GenerateDelegates(Worker worker, UIBuilder ui, Predicate<ISyncMember> memberFilter)
             {
-                if (config.GetValue(KEY_SHOW_HIDDEN))
+                if (ShowHidden.Value)
                 {
                     for (int i = 0; i < worker.SyncMemberCount; i++)
                     {
@@ -188,12 +187,12 @@ namespace ShowDelegates
                     }
                 }
 
-                if (!config.GetValue(KEY_SHOW_DELEGATES)) return;
+                if (!ShowDelegates.Value) return;
 
                 if (worker.SyncMethodCount > 0)
                 {
                     var initInfo = Traverse.Create(worker).Field<WorkerInitInfo>("InitInfo").Value;
-                    var syncFuncs = config.GetValue(KEY_SHOW_NON_DEFAULT) ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate) && m.method.IsPublic);
+                    var syncFuncs = ShowNonDefault.Value ? initInfo.syncMethods.AsEnumerable() : initInfo.syncMethods.Where((m) => m.methodType != typeof(Delegate) && m.method.IsPublic);
 
                     if (!syncFuncs.Any()) return;
 
@@ -203,7 +202,7 @@ namespace ShowDelegates
                     delegates.Slot.RemoveComponent(delegates.Slot.GetComponent<LayoutElement>());
                     var expander = myTxt.Slot.AttachComponent<Expander>();
                     expander.SectionRoot.Target = delegates.Slot;
-                    expander.IsExpanded = config.GetValue(KEY_DEFAULT_OPEN);
+                    expander.IsExpanded = DefaultOpen.Value;
                     var theButton = myTxt.Slot.AttachComponent<Button>();
                     var colorDriver = theButton.ColorDrivers.Add();
                     colorDriver.ColorDrive.Target = myTxt.Color;
@@ -224,7 +223,7 @@ namespace ShowDelegates
                             }
                             catch (Exception e)
                             {
-                                Error($"Error when trying to create a delegate for {info.method.FullDescription()} with sync method type {delegateType.GetNiceName()}. This is most likely a bug with Resonite, not the mod.\n{e}");
+                                Log.LogError($"Error when trying to create a delegate for {info.method.FullDescription()} with sync method type {delegateType.GetNiceName()}. This is most likely a bug with Resonite, not the mod.\n{e}");
                             }
                         }
                         
@@ -238,13 +237,13 @@ namespace ShowDelegates
                             }
                             catch (Exception e)
                             {
-                                Error("Error while classifying function " + info.method + "\n" + e);
+                                Log.LogError("Error while classifying function " + info.method + "\n" + e);
                             }
                         }
                         
                         if (method == null)
                         {
-                            Error("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
+                            Log.LogError("Unmapped type. Please report this message to the mod author: Could not identify " + info.method + " on type " + info.method.DeclaringType);
                             ui.Text("<color=orange>" + funName("<i>unknown</i>", info.method), true, Alignment.MiddleLeft);
                             continue;
                         }
@@ -280,5 +279,4 @@ namespace ShowDelegates
 
             }
         }
-    }
 }
